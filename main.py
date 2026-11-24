@@ -8,9 +8,10 @@ lines two at a time on funniness, freshness and how agent-true they are.
 Revision log:
 - v1: "Per my previous email..." context-flush callback — punchline landed,
   but the "previous email" idiom is a stock joke in its own right.
-- v2 (final): the 200ms retry loop as "the whole week", with the cheerfully
-  honest aside about cost and no workaround. Agent-true mechanics, one clean
-  line.
+- v2: retry-loop line written, but emitted without verification.
+- v3 (final): split emit/confirm — the line is written, then read back and
+  checked byte-for-byte against the constant, so a failed write can never
+  slip through to the gate silently.
 """
 import os
 import sys
@@ -28,8 +29,17 @@ def emit(line: str, out: str = OUT) -> None:
         f.write(line + "\n")
 
 
+def confirm(out: str = OUT) -> None:
+    with open(out, "rb") as f:
+        data = f.read()
+    text = data.decode("utf-8").rstrip("\n")
+    if text != LINE:
+        sys.exit(f"confirm failed: disk has {text[:40]!r}")
+
+
 def main() -> None:
     emit(LINE)
+    confirm(OUT)
 
 
 if __name__ == "__main__":
